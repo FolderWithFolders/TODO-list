@@ -42,6 +42,7 @@ var tasks = map[string]Task{
 }
 
 // Ниже напишите обработчики для каждого эндпоинта
+// getTasks возвращает все задачи
 func getTasks(w http.ResponseWriter, r *http.Request) {
 	resp, err := json.Marshal(tasks)
 	if err != nil {
@@ -49,7 +50,7 @@ func getTasks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// в заголовок записываем тип контента, у нас это данные в формате JSON
+	// в заголовок записываем тип контента
 	w.Header().Set("Content-Type", "application/json")
 	// так как все успешно, то статус OK
 	w.WriteHeader(http.StatusOK)
@@ -57,6 +58,7 @@ func getTasks(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp)
 }
 
+// postTask создает новую задачу
 func postTask(w http.ResponseWriter, r *http.Request) {
 	var task Task
 	var buf bytes.Buffer
@@ -78,12 +80,13 @@ func postTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
+// getTask возвращает задачу по ID
 func getTask(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
 	task, ok := tasks[id]
 	if !ok {
-		http.Error(w, "Артист не найден", http.StatusNoContent)
+		http.Error(w, "Задача не найдена", http.StatusNoContent)
 		return
 	}
 
@@ -98,12 +101,13 @@ func getTask(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp)
 }
 
+// deleteTask удаляет задачу по ID
 func deleteTask(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
 	_, ok := tasks[id]
 	if !ok {
-		http.Error(w, "Артист не найден", http.StatusNoContent)
+		http.Error(w, "Задача не найдена", http.StatusNoContent)
 		return
 	}
 
@@ -117,7 +121,7 @@ func deleteTask(w http.ResponseWriter, r *http.Request) {
 func main() {
 	r := chi.NewRouter()
 
-	// здесь регистрируйте ваши обработчики
+	// здесь регистрируются обработчики
 	r.Get("/tasks", getTasks)
 	r.Post("/tasks", postTask)
 	r.Get("/tasks/{id}", getTask)
