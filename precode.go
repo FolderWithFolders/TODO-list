@@ -42,6 +42,7 @@ var tasks = map[string]Task{
 }
 
 // Ниже напишите обработчики для каждого эндпоинта
+// getTasks возвращает все задачи
 func getTasks(w http.ResponseWriter, r *http.Request) {
 	resp, err := json.Marshal(tasks)
 	if err != nil {
@@ -49,7 +50,7 @@ func getTasks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// в заголовок записываем тип контента, у нас это данные в формате JSON
+	// в заголовок записываем тип контента
 	w.Header().Set("Content-Type", "application/json")
 	// так как все успешно, то статус OK
 	w.WriteHeader(http.StatusOK)
@@ -57,6 +58,8 @@ func getTasks(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp)
 }
 
+// postTask создает новую задачу
+// postTask создает новую задачу
 func postTask(w http.ResponseWriter, r *http.Request) {
 	var task Task
 	var buf bytes.Buffer
@@ -72,18 +75,25 @@ func postTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Проверяем, есть ли уже задача с таким ID
+	if _, ok := tasks[task.ID]; ok {
+		http.Error(w, "Задача с таким ID уже существует", http.StatusBadRequest)
+		return
+	}
+
 	tasks[task.ID] = task
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 }
 
+// getTask возвращает задачу по ID
 func getTask(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
 	task, ok := tasks[id]
 	if !ok {
-		http.Error(w, "Артист не найден", http.StatusNoContent)
+		http.Error(w, "Задача не найдена", http.StatusBadRequest)
 		return
 	}
 
@@ -98,17 +108,13 @@ func getTask(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp)
 }
 
-// Обработчик должен удалить задачу из мапы по её ID. Здесь так же нужно сначала проверить, есть ли задача с таким ID в мапе, если нет вернуть соответствующий статус.
-// Конечная точка /tasks/{id}.
-// Метод DELETE.
-// При успешном выполнении запроса сервер должен вернуть статус 200 OK.
-// В случае ошибки или отсутствия задачи в мапе сервер должен вернуть статус 400 Bad Request.
+// deleteTask удаляет задачу по ID
 func deleteTask(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
 	_, ok := tasks[id]
 	if !ok {
-		http.Error(w, "Артист не найден", http.StatusNoContent)
+		http.Error(w, "Задача не найдена", http.StatusBadRequest)
 		return
 	}
 
@@ -122,7 +128,7 @@ func deleteTask(w http.ResponseWriter, r *http.Request) {
 func main() {
 	r := chi.NewRouter()
 
-	// здесь регистрируйте ваши обработчики
+	// здесь регистрируются обработчики
 	r.Get("/tasks", getTasks)
 	r.Post("/tasks", postTask)
 	r.Get("/tasks/{id}", getTask)
