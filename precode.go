@@ -59,6 +59,7 @@ func getTasks(w http.ResponseWriter, r *http.Request) {
 }
 
 // postTask создает новую задачу
+// postTask создает новую задачу
 func postTask(w http.ResponseWriter, r *http.Request) {
 	var task Task
 	var buf bytes.Buffer
@@ -74,6 +75,12 @@ func postTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Проверяем, есть ли уже задача с таким ID
+	if _, ok := tasks[task.ID]; ok {
+		http.Error(w, "Задача с таким ID уже существует", http.StatusBadRequest)
+		return
+	}
+
 	tasks[task.ID] = task
 
 	w.Header().Set("Content-Type", "application/json")
@@ -86,7 +93,7 @@ func getTask(w http.ResponseWriter, r *http.Request) {
 
 	task, ok := tasks[id]
 	if !ok {
-		http.Error(w, "Задача не найдена", http.StatusNoContent)
+		http.Error(w, "Задача не найдена", http.StatusBadRequest)
 		return
 	}
 
@@ -107,7 +114,7 @@ func deleteTask(w http.ResponseWriter, r *http.Request) {
 
 	_, ok := tasks[id]
 	if !ok {
-		http.Error(w, "Задача не найдена", http.StatusNoContent)
+		http.Error(w, "Задача не найдена", http.StatusBadRequest)
 		return
 	}
 
